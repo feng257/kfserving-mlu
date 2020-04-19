@@ -11,9 +11,9 @@ pip install -e .
 Once tf server is up and running, you can check for successful installation by running the following command
 
 ```
-python3 -m tfserver
+python -m tfserver
 usage: __main__.py [-h] [--http_port HTTP_PORT] [--grpc_port GRPC_PORT]
-                   [--workers WORKERS] --model_dir MODEL_DIR
+                   [--workers WORKERS] --model_file MODEL_FILE
                    [--model_name MODEL_NAME] --input_name INPUT_NAME
                    --output_name OUTPUT_NAME
 
@@ -24,8 +24,8 @@ optional arguments:
   --grpc_port GRPC_PORT
                         The GRPC Port listened to by the model server.
   --workers WORKERS     The number of works to fork
-  --model_dir MODEL_DIR
-                        The path of the model directory
+  --model_file MODEL_FILE
+                        The file of the pb model
   --model_name MODEL_NAME
                         The name that the model is served under.
   --input_name INPUT_NAME

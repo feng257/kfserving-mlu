@@ -21,8 +21,8 @@ DEFAULT_MODEL_NAME = "model"
 DEFAULT_LOCAL_MODEL_DIR = "/tmp/model"
 
 parser = argparse.ArgumentParser(parents=[kfserving.kfserver.parser])
-parser.add_argument('--model_dir', required=True,
-                    help='The path of the model directory')
+parser.add_argument('--model_file', required=True,
+                    help='The file of the pb model')
 parser.add_argument('--model_name', default=DEFAULT_MODEL_NAME,
                     help='The name that the model is served under.')
 parser.add_argument('--input_name', required=True,
@@ -32,6 +32,6 @@ parser.add_argument('--output_name', required=True,
 args, _ = parser.parse_known_args()
 
 if __name__ == "__main__":
-    model = TFModel(args.model_name, args.model_dir, args.input_name, args.output_name)
+    model = TFModel(args.model_name, args.model_file, args.input_name, args.output_name)
     model.load()
     kfserving.KFServer().start([model])

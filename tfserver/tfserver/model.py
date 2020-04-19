@@ -24,10 +24,10 @@ TENSORFLOW_MODEL_FILE = "saved_model.pb"
 
 
 class TFModel(kfserving.KFModel):
-    def __init__(self, name, saved_model_dir, input_name, output_name):
+    def __init__(self, name, model_file, input_name, output_name):
         kfserving.KFModel.__init__(self,name)
         self.name = name
-        self.saved_model_dir = saved_model_dir
+        self.model_file = model_file
         self.input_name = input_name
         self.output_name = output_name
         self.ready = False
@@ -37,8 +37,7 @@ class TFModel(kfserving.KFModel):
     def load(self):
         graph = tf.Graph()
         graph_def = tf.GraphDef()
-        model_file = os.path.join(self.saved_model_dir, TENSORFLOW_MODEL_FILE)
-        with open(model_file, "rb") as f:
+        with open(self.model_file, "rb") as f:
             graph_def.ParseFromString(f.read())
         with graph.as_default():
             tf.import_graph_def(graph_def)
