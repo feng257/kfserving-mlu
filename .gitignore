@@ -1,0 +1,8 @@
+.idea
+build
+dist
+tfserver.egg-info
+*.pyc
+tfserver/__pycache__
+.DS_Store
+*.DS_Store
