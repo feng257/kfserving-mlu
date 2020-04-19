@@ -8,7 +8,7 @@ KFServing Python SDK can be installed by `pip` or `Setuptools`.
 ### pip install
 
 ```sh
-pip install kfserving
+pip install -e .
 ```
 
 ### Setuptools
