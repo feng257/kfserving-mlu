@@ -31,7 +31,7 @@ setup(
     python_requires='>2.7',
     packages=find_packages("tfserver"),
     install_requires=[
-        "kfserving>=0.2.2",
+        "kfserving>=0.2.0",
         "torch >= 1.0.0",
         "argparse >= 1.4.0",
         "numpy >= 1.8.2",
