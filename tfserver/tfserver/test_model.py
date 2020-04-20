@@ -80,6 +80,6 @@ def rest_test_model_image(image_file):
 
 if __name__ == '__main__':
     # test_model()
-    # python __main__.py --model_dir=example_model/inception_v3 --model_name=inception_v3  --input_name=import/input --output_name=import/InceptionV3/Predictions/Reshape_1
+    # python -m tfserver --model_dir=example_model/inception_v3 --model_name=inception_v3  --input_name=import/input --output_name=import/InceptionV3/Predictions/Reshape_1
     rest_test_model()
     rest_test_model_image("./example_model/grace_hopper.jpg")
