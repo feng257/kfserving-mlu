@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 import kfserving
 import numpy as np
 import tensorflow as tf
@@ -54,8 +52,8 @@ class TFModel(kfserving.KFModel):
             raise Exception(
                 "Failed to initialize Tensorflow Tensor from inputs: %s, %s" % (e, inputs))
         try:
-            input_operation = self.graph.get_operation_by_name("import/" + self.input_name)
-            output_operation = self.graph.get_operation_by_name("import/" + self.output_name)
+            input_operation = self.graph.get_operation_by_name(self.input_name)
+            output_operation = self.graph.get_operation_by_name(self.output_name)
         except Exception as e:
             raise Exception("Failed to get signature %s" % e)
         try:

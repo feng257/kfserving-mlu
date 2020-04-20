@@ -52,11 +52,9 @@ class PyTorchModel(kfserving.KFModel):
         modulename = os.path.basename(model_class_file).split('.')[0].replace('-', '_')
         model_class = getattr(importlib.import_module(modulename), model_class_name)
 
-        # Make sure the model weight is transform with the right device in this machine
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        self._pytorch = model_class().to(device)
-        self._pytorch.load_state_dict(torch.load(model_file, map_location=device))
-        self._pytorch.eval()
+        self._pytorch = model_class()
+        self._pytorch.load_state_dict(torch.load(model_file))
+        self._pytorch.eval().float().mlu()
         self.ready = True
 
     def predict(self, request):
@@ -67,6 +65,8 @@ class PyTorchModel(kfserving.KFModel):
             raise Exception(
                 "Failed to initialize Torch Tensor from inputs: %s, %s" % (e, inputs))
         try:
-            return {"predictions":  self._pytorch(inputs).tolist()}
+            output = self._pytorch(inputs.mlu())
+            output = output.cpu().type(torch.FloatTensor)
+            return {"predictions":  output.tolist()}
         except Exception as e:
             raise Exception("Failed to predict %s" % e)
