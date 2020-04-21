@@ -65,9 +65,14 @@ def test_model():
 def rest_test_model():
     url = "http://127.0.0.1:8080/v1/models/inception_v3:predict"
     input_tensor = np.random.normal(-1, 1, [299, 299, 3])
-    request = {"instances": input_tensor.tolist()}
-    response = requests.post(url, data=json.dumps(request))
-    print(response.json())
+    request = {
+        "signature_name": "predict_images",
+        "instances": input_tensor.tolist()
+    }
+    with open("./example_model/input.json", "w+") as f:
+        f.writelines(json.dumps(request))
+    # response = requests.post(url, data=json.dumps(request))
+    # print(response.json())
 
 
 def rest_test_model_image(image_file):
@@ -78,8 +83,62 @@ def rest_test_model_image(image_file):
     print(response.json())
 
 
+def predit_graph_def2():
+    model_file = "/Users/jinxiang/Downloads/inception_v3.pb"
+    input_name = "input"
+    output_name = "InceptionV3/Predictions/Softmax"
+    inputs = np.random.normal(-1, 1, [1, 299, 299, 3])
+    graph = tf.Graph()
+    graph_def = tf.GraphDef()
+    with open(model_file, "rb") as f:
+        graph_def.ParseFromString(f.read())
+    with graph.as_default():
+        tf.import_graph_def(graph_def)
+    input_operation = graph.get_operation_by_name("import/" + input_name)
+    output_operation = graph.get_operation_by_name("import/" + output_name)
+    with tf.Session(graph=graph) as sess:
+        results = sess.run(output_operation.outputs[0], {
+            input_operation.outputs[0]: inputs
+        })
+        print(results)
+
+
+def predit_graph_def():
+    model_file = "/Users/jinxiang/Downloads/inception_v3.pb"
+    input_tensor_name = "input:0"
+    output_tensor_name = "InceptionV3/Predictions/Softmax:0"
+    inputs = np.random.normal(-1, 1, [1, 299, 299, 3])
+    graph = tf.Graph()
+    graph_def = tf.GraphDef()
+    with open(model_file, "rb") as f:
+        graph_def.ParseFromString(f.read())
+    with graph.as_default():
+        tf.import_graph_def(graph_def)
+    input_operation = graph.get_tensor_by_name("import/" + input_tensor_name)
+    output_operation = graph.get_tensor_by_name("import/" + output_tensor_name)
+    with tf.Session(graph=graph) as sess:
+        results = sess.run(output_operation, {
+            input_operation: inputs
+        })
+        print(results)
+
+
+def predit_saved_model():
+    saved_model_dir = "/root/tf-serving-1.14/saved_models/inception_v3/1"
+    input_tensor_name = "input:0"
+    output_tensor_name = "InceptionV3/Predictions/Softmax:0"
+    inputs = np.random.normal(-1, 1, [1, 299, 299, 3])
+    with tf.Session(graph=tf.Graph()) as sess:
+        tf.saved_model.loader.load(sess, ["serve"], saved_model_dir)
+        input_tensor = sess.graph.get_tensor_by_name(input_tensor_name)
+        output_tensor = sess.graph.get_tensor_by_name(output_tensor_name)
+        results = sess.run(output_tensor, feed_dict={input_tensor: inputs})
+        print(results)
+
+
 if __name__ == '__main__':
     # test_model()
-    # python -m tfserver --model_dir=example_model/inception_v3 --model_name=inception_v3  --input_name=import/input --output_name=import/InceptionV3/Predictions/Reshape_1
-    rest_test_model()
-    rest_test_model_image("./example_model/grace_hopper.jpg")
+    # python -m tfserver --model_dir=example_model/inception_v3 --model_name=inception_v3  --input_name=input --output_name=InceptionV3/Predictions/Reshape_1
+    # rest_test_model()
+    # rest_test_model_image("./example_model/grace_hopper.jpg")
+    predit_graph_def()

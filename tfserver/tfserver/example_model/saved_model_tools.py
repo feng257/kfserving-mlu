@@ -3,21 +3,16 @@
 import argparse
 import tensorflow as tf
 
+
 def pb_to_saved_model():
     builder = tf.saved_model.builder.SavedModelBuilder(args.export_dir)
-
     with tf.gfile.GFile(args.graph, "rb") as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString(f.read())
-
     with tf.Session(graph=tf.Graph()) as sess:
-        # name="" is important to ensure we don't get spurious prefixing
         tf.import_graph_def(graph_def)
-        g = tf.get_default_graph()
-        # input_ids = sess.graph.get_tensor_by_name(input_tensor_name)
-        # output_ids = sess.graph.get_tensor_by_name(output_tensor_name)
-        input_ids = sess.graph.get_operation_by_name(args.input_layer).outputs[0]
-        output_ids = sess.graph.get_operation_by_name(args.output_layer).outputs[0]
+        input_ids = sess.graph.get_operation_by_name("import/" + args.input_layer).outputs[0]
+        output_ids = sess.graph.get_operation_by_name("import/" + args.output_layer).outputs[0]
         tensor_info_input = tf.saved_model.utils.build_tensor_info(input_ids)
         tensor_info_output = tf.saved_model.utils.build_tensor_info(output_ids)
         prediction_signature = (tf.saved_model.signature_def_utils.build_signature_def(
@@ -31,7 +26,6 @@ def pb_to_saved_model():
                     prediction_signature,
             })
     builder.save()
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--graph", required=True, help="graph/model to be executed")
@@ -41,8 +35,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     pb_to_saved_model()
     '''
-    python saved_model_tools.py --graph=/Users/jinxiang/Downloads/models/inception_v3_float16_sparse.cpu.pb \
+    python saved_model_tools.py 
+        --graph=./inception_v3.pb \
         --export_dir=/Users/jinxiang/Downloads/output_saved_models \
-        --input_layer=import/input --output_layer=import/InceptionV3/Predictions/Reshape_1
+        --input_layer=input \
+        --output_layer=InceptionV3/Predictions/Softmax
     '''
-

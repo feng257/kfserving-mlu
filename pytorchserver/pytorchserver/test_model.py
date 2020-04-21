@@ -17,6 +17,8 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import os
+import requests
+import json
 
 model_dir = model_dir = os.path.join(os.path.dirname(__file__), "example_model")
 MODEL_FILE = "model.pt"
@@ -38,3 +40,23 @@ def test_model():
     request = {"instances" : images[0:1].tolist()}
     response = server.predict(request)
     assert isinstance(response["instances"][0], list)
+
+
+def rest_test_model():
+    url="http://127.0.0.1:8080/v1/models/cifar10:predict"
+    transform = transforms.Compose([transforms.ToTensor(),
+                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
+                                           download=True, transform=transform)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=4,
+                                             shuffle=False, num_workers=2)
+    dataiter = iter(testloader)
+    images, _ = dataiter.next()
+    input = images[0:1]
+    # input = torch.randn(1, 3, 32, 32)
+    request = {"instances": input.tolist()}
+    response = requests.post(url,data=json.dumps(request))
+    print(response.json())
+
+if __name__ == '__main__':
+    rest_test_model()
