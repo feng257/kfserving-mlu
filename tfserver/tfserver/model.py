@@ -44,11 +44,6 @@ class TFModel(kfserving.KFModel):
         config = tf.ConfigProto()
         config.log_device_placement = False
         config.allow_soft_placement = True
-        # if tf.__version__.startswith("1"):
-        #     session = tf.Session(graph=graph, config=config)
-        # else:
-        #     session = tf.compat.v1.Session(graph=tf.Graph(), config=config)
-        # self.version_session_map[self.name] = session
         self.session_config = config
         self.graph = graph
         self.ready = True
@@ -57,8 +52,6 @@ class TFModel(kfserving.KFModel):
         inputs = []
         try:
             inputs = np.array(request["instances"])
-            input_shape = tuple(tools.flatten([(self._batch_size), inputs.shape]))
-            inputs = inputs.reshape(input_shape)
         except Exception as e:
             raise Exception(
                 "Failed to initialize Tensorflow Tensor from inputs: %s, %s" % (e, inputs))

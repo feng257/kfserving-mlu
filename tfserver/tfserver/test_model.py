@@ -64,15 +64,13 @@ def test_model():
 
 def rest_test_model():
     url = "http://127.0.0.1:8080/v1/models/inception_v3:predict"
-    input_tensor = np.random.normal(-1, 1, [299, 299, 3])
+    input_tensor = np.random.normal(-1, 1, [1, 299, 299, 3])
     request = {
         "signature_name": "predict_images",
         "instances": input_tensor.tolist()
     }
-    with open("./example_model/input.json", "w+") as f:
-        f.writelines(json.dumps(request))
-    # response = requests.post(url, data=json.dumps(request))
-    # print(response.json())
+    response = requests.post(url, data=json.dumps(request))
+    print(response.json())
 
 
 def rest_test_model_image(image_file):
