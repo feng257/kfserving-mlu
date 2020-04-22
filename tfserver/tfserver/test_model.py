@@ -136,7 +136,7 @@ def predit_saved_model():
 
 if __name__ == '__main__':
     # test_model()
-    # python -m tfserver --model_dir=example_model/inception_v3 --model_name=inception_v3  --input_name=input --output_name=InceptionV3/Predictions/Reshape_1
-    # rest_test_model()
+    # python -m tfserver --saved_model_dir=/Users/jinxiang/Downloads/output_saved_models --model_name=inception_v3
+    rest_test_model()
     # rest_test_model_image("./example_model/grace_hopper.jpg")
-    predit_graph_def()
+    # predit_graph_def()
