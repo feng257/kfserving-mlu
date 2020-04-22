@@ -46,7 +46,6 @@ def read_tensor_from_image_file(file_name,
     normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
     with tf.Session() as sess:
         result = sess.run(normalized)
-        result = result.reshape(input_width, input_height, 3)
         return result
     return None
 
@@ -55,7 +54,7 @@ def test_model():
     server = TFModel("inception_v3", model_dir, "input", "InceptionV3/Predictions/Reshape_1")
     server.load()
 
-    input_tensor = np.random.normal(-1, 1, [299, 299, 3])
+    input_tensor = np.random.normal(-1, 1, [1, 299, 299, 3])
 
     request = {"instances": input_tensor.tolist()}
     response = server.predict(request)
@@ -65,6 +64,16 @@ def test_model():
 def rest_test_model():
     url = "http://127.0.0.1:8080/v1/models/inception_v3:predict"
     input_tensor = np.random.normal(-1, 1, [1, 299, 299, 3])
+    request = {
+        "signature_name": "predict_images",
+        "instances": input_tensor.tolist()
+    }
+    response = requests.post(url, data=json.dumps(request))
+    print(response.json())
+
+def rest_test_mnist_model():
+    url = "http://127.0.0.1:8080/v1/models/mnist:predict"
+    input_tensor = np.random.normal(-1, 1, [1, 784])
     request = {
         "signature_name": "predict_images",
         "instances": input_tensor.tolist()
@@ -122,9 +131,9 @@ def predit_graph_def():
 
 
 def predit_saved_model():
-    saved_model_dir = "/root/tf-serving-1.14/saved_models/inception_v3/1"
-    input_tensor_name = "input:0"
-    output_tensor_name = "InceptionV3/Predictions/Softmax:0"
+    saved_model_dir = "/Users/jinxiang/Downloads/output_saved_models"
+    input_tensor_name = "import/input:0"
+    output_tensor_name = "import/InceptionV3/Predictions/Softmax:0"
     inputs = np.random.normal(-1, 1, [1, 299, 299, 3])
     with tf.Session(graph=tf.Graph()) as sess:
         tf.saved_model.loader.load(sess, ["serve"], saved_model_dir)
@@ -136,7 +145,9 @@ def predit_saved_model():
 
 if __name__ == '__main__':
     # test_model()
-    # python -m tfserver --saved_model_dir=/Users/jinxiang/Downloads/output_saved_models --model_name=inception_v3
+    # python -m tfserver --saved_model_dir=/Users/jinxiang/Downloads/output_saved_models --model_name=inception_v3 --workers=1
+    # python -m tfserver --saved_model_dir=/Users/jinxiang/Downloads/models/2/1 --model_name=mnist --workers=1
     rest_test_model()
+    # rest_test_mnist_model()
     # rest_test_model_image("./example_model/grace_hopper.jpg")
     # predit_graph_def()

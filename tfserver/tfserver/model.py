@@ -24,19 +24,21 @@ class TFModel(kfserving.KFModel):
         kfserving.KFModel.__init__(self, name)
         self.name = name
         self.saved_model_dir = saved_model_dir
-        self.metadata = tools.getMetadata(saved_model_dir)
-        self.graph = tf.Graph()
+        self.metadata = None
         self.session_config = None
         self.sess = None
         self.ready = False
 
     def load(self):
+        model_file_dir = kfserving.Storage.download(self.saved_model_dir)
+        self.metadata = tools.getMetadata(model_file_dir)
         config = tf.ConfigProto()
-        config.log_device_placement = True
+        config.log_device_placement = False
         config.allow_soft_placement = True
         self.session_config = config
-        with tf.Session(graph=self.graph, config=config) as sess:
-            tf.saved_model.loader.load(sess, ['serve'], self.saved_model_dir)
+        self.sess = tf.Session(graph=tf.Graph(), config=config)
+        tf.saved_model.loader.load(self.sess, ['serve'], model_file_dir)
+        tf.saved_model.load
         self.ready = True
 
     def predict(self, request):
@@ -49,43 +51,16 @@ class TFModel(kfserving.KFModel):
         try:
             signature_name = request['signature_name']
             signature_info = self.metadata.signatute_info[signature_name]
-            input_tensor = self.graph.get_tensor_by_name(signature_info.input_tensor[0].name)
-            output_tensor = self.graph.get_tensor_by_name(signature_info.output_tensor[0].name)
-            # output_tensor_names = [t.name for t in signature_info.output_tensor]
+            input_tensor = self.sess.graph.get_tensor_by_name(signature_info.input_tensor[0].name)
+            output_tensors = self.sess.graph.get_tensor_by_name(signature_info.output_tensor[0].name)
         except Exception as e:
             raise Exception("Failed to get signature %s" % e)
         try:
-            with tf.Session(graph=self.graph, config=self.session_config) as sess:
-                results = sess.run(output_tensor, feed_dict={input_tensor: inputs})
-                return {"predictions": results.tolist()}
+            results = self.sess.run(output_tensors, feed_dict={input_tensor: inputs})
+            if len(results) > 1:
+                results = [arr.tolist() for arr in results]
+            else:
+                results = results[0].tolist()
+            return {"predictions": results}
         except Exception as e:
             raise Exception("Failed to predict %s" % e)
-    # def load(self):
-    #     config = tf.ConfigProto()
-    #     config.log_device_placement = True
-    #     config.allow_soft_placement = True
-    #     self.session_config = config
-    #     self.sess = tf.Session(graph=self.graph, config=config)
-    #     tf.saved_model.loader.load(self.sess, ['serve'], self.saved_model_dir)
-    #     self.ready = True
-    #
-    # def predict(self, request):
-    #     inputs = []
-    #     try:
-    #         inputs = np.array(request["instances"])
-    #     except Exception as e:
-    #         raise Exception(
-    #             "Failed to initialize Tensorflow Tensor from inputs: %s, %s" % (e, inputs))
-    #     try:
-    #         signature_name = request['signature_name']
-    #         signature_info = self.metadata.signatute_info[signature_name]
-    #         input_tensor = self.graph.get_tensor_by_name(signature_info.input_tensor[0].name)
-    #         output_tensor = self.graph.get_tensor_by_name(signature_info.output_tensor[0].name)
-    #         # output_tensor_names = [t.name for t in signature_info.output_tensor]
-    #     except Exception as e:
-    #         raise Exception("Failed to get signature %s" % e)
-    #     try:
-    #         results = self.sess.run(output_tensor, feed_dict={input_tensor: inputs})
-    #         return {"predictions": results.tolist()}
-    #     except Exception as e:
-    #         raise Exception("Failed to predict %s" % e)
