@@ -73,7 +73,7 @@ def _create_rpc_callback(label, result_counter):
                 result_future.result().outputs['scores'].float_val)
             prediction = np.argmax(response)
             if label != prediction:
-                print(label,prediction)
+                print("实际类别:" + str(label) + " 预测类别：" + str(prediction))
                 result_counter.inc_error()
         result_counter.inc_done()
         result_counter.dec_active()
