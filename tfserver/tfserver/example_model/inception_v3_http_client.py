@@ -235,12 +235,4 @@ if __name__ == '__main__':
     parser.add_argument("--save", default=False, help="dataset dir")
     args = parser.parse_args()
 
-    # args.host = "192.168.113.39:18500"
-    # args.model_name = "inception_v3"
-    # args.num_tests = 4
-    # args.concurrency = 1
-    # args.data_dir = "/Users/jinxiang/Downloads/imagenet"
-    # args.save = True
-
-    error_rate = grpc_inception_v3_client(args.host, args.model_name, args.num_tests, args.concurrency, args.data_dir)
-    print('\nInference error rate: %s%%' % (error_rate * 100))
+    http_inception_v3_client(args.host, args.model_name, args.num_tests, args.data_dir)
