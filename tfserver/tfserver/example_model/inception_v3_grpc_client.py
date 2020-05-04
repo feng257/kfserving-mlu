@@ -208,9 +208,31 @@ def grpc_inception_v3_client(target, model_name, num_tests, concurrency, data_di
     return result_counter.get_error_rate()
 
 
+def grpc_inception_v3_secret_client(target, model_name, num_tests, concurrency, data_dir):
+    test_data_set = read_imagenet_val_data_sets(data_dir, num_tests)
+    start = datetime.now()
+    result_counter = _ResultCounter(num_tests, concurrency)
+    creds = grpc.ssl_channel_credentials(open('tls.pem', 'rb').read())
+    channel = grpc.secure_channel(target,creds)
+    stub = prediction_service_pb2_grpc.PredictionServiceStub(channel)
+    for _ in range(num_tests):
+        filename, image, label = test_data_set.next_batch(1)
+        request = predict_pb2.PredictRequest()
+        request.model_spec.name = model_name
+        request.model_spec.signature_name = 'predict_images'
+        request.inputs['images'].CopyFrom(tf.make_tensor_proto(image[0], shape=[1, 299, 299, 3]))
+        result_counter.throttle()
+        result_future = stub.Predict.future(request, 5.0)  # 5 seconds
+        result_future.add_done_callback(
+            _create_rpc_callback(filename, label[0], result_counter))
+    deltaTime = (datetime.now() - start).total_seconds()
+    print("Time:", deltaTime)
+    return result_counter.get_error_rate()
+
+
 def http_inception_v3_client(target, model_name, num_tests, data_dir):
     test_data_set = read_imagenet_val_data_sets(data_dir, num_tests)
-    url = "http://"+target + "/v1/models/" + model_name + ":predict"
+    url = "http://" + target + "/v1/models/" + model_name + ":predict"
     start = datetime.now()
     for _ in range(num_tests):
         filename, image, label = test_data_set.next_batch(1)

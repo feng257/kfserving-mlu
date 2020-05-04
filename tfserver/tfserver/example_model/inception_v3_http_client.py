@@ -210,12 +210,27 @@ def grpc_inception_v3_client(target, model_name, num_tests, concurrency, data_di
 
 def http_inception_v3_client(target, model_name, num_tests, data_dir):
     test_data_set = read_imagenet_val_data_sets(data_dir, num_tests)
-    url = "http://"+target + "/v1/models/" + model_name + ":predict"
+    url = "http://" + target + "/v1/models/" + model_name + ":predict"
     start = datetime.now()
     for _ in range(num_tests):
         filename, image, label = test_data_set.next_batch(1)
         request = {
             "signature_name": 'predict_images',
+            "instances": image.reshape([1, 299, 299, 3]).tolist()
+        }
+        response = requests.post(url, data=json.dumps(request))
+        # print(response.json())
+    deltaTime = (datetime.now() - start).total_seconds()
+    print("Time:", deltaTime)
+
+
+def http_inception_v3_kfserving_client(target, model_name, num_tests, data_dir):
+    test_data_set = read_imagenet_val_data_sets(data_dir, num_tests)
+    url = "http://" + target + "/v1/models/" + model_name + ":predict"
+    start = datetime.now()
+    for _ in range(num_tests):
+        filename, image, label = test_data_set.next_batch(1)
+        request = {
             "instances": image.reshape([1, 299, 299, 3]).tolist()
         }
         response = requests.post(url, data=json.dumps(request))
@@ -235,4 +250,4 @@ if __name__ == '__main__':
     parser.add_argument("--save", default=False, help="dataset dir")
     args = parser.parse_args()
 
-    http_inception_v3_client(args.host, args.model_name, args.num_tests, args.data_dir)
+    http_inception_v3_kfserving_client(args.host, args.model_name, args.num_tests, args.data_dir)
