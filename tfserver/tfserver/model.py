@@ -31,7 +31,7 @@ class TFModel(kfserving.KFModel):
         self.ready = False
         self.graph = None
         self.session_config = None
-        # self.version_session_map = {}
+        self.session = None
         self._batch_size = 1
 
     def load(self):
@@ -46,6 +46,8 @@ class TFModel(kfserving.KFModel):
         config.allow_soft_placement = True
         self.session_config = config
         self.graph = graph
+        self.session = tf.Session(graph=self.graph, config=self.session_config)
+        self.session.as_default()
         self.ready = True
 
     def predict(self, request):
@@ -61,10 +63,9 @@ class TFModel(kfserving.KFModel):
         except Exception as e:
             raise Exception("Failed to get signature %s" % e)
         try:
-            with tf.Session(graph=self.graph, config=self.session_config) as sess:
-                results = sess.run(output_operation.outputs[0], {
-                    input_operation.outputs[0]: inputs
-                })
+            results = self.session.run(output_operation.outputs[0], {
+                input_operation.outputs[0]: inputs
+            })
             return {"predictions": results.tolist()}
         except Exception as e:
             raise Exception("Failed to predict %s" % e)

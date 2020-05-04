@@ -30,7 +30,7 @@ parser.add_argument('--http_port', default=DEFAULT_HTTP_PORT, type=int,
                     help='The HTTP Port listened to by the model server.')
 parser.add_argument('--grpc_port', default=DEFAULT_GRPC_PORT, type=int,
                     help='The GRPC Port listened to by the model server.')
-parser.add_argument('--workers', default=0, type=int,
+parser.add_argument('--workers', default=1, type=int,
                     help='The number of works to fork')
 args, _ = parser.parse_known_args()
 
