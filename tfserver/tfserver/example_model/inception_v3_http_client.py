@@ -239,19 +239,26 @@ def http_inception_v3_kfserving_client(target, model_name, num_tests, data_dir):
     print("Time:", deltaTime)
 
 
-def print_json():
-    image = np.random.normal(-1, 1, [299, 299, 3])
+def generator_wrk_post_lua():
+    image = np.random.normal(-1, 1, [1, 299, 299, 3])
+
     request = {
         "instances": image.reshape([1, 299, 299, 3]).tolist()
     }
     data=json.dumps(request)
+    with open("incepiton_v3_post.lua","w+") as f:
+        f.writelines('wrk.method = "POST"\n')
+        f.write("wrk.body = '")
+        f.write(data)
+        f.write("'\n")
+        f.writelines('wrk.headers["Content-Type"] = "application/json"')
 
 
 
 if __name__ == '__main__':
     import sys
-    print_json()
-    sys.exit(0)
+    # generator_wrk_post_lua()
+    # sys.exit(0)
     sess = tf.Session()
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", required=True, help="host:port")
